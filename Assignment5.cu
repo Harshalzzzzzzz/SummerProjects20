@@ -6,13 +6,13 @@
 #include <cuda.h>
 #include<bits/stdc++.h>
 using namespace std;
-#define l1 long long int
+#define ll long long int
 
 const int Block_Size = 1024;
 
-__global__ void Inclusive_Scan(l1 *d_in, l1* d_out)
+__global__ void Inclusive_Scan(ll *d_in, ll* d_out)
 {
-    __shared__ l1 sh_array[Block_Size];
+    __shared__ ll sh_array[Block_Size];
 
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     int tid = threadIdx.x;
@@ -27,7 +27,7 @@ __global__ void Inclusive_Scan(l1 *d_in, l1* d_out)
     {
         if(tid >= step)
         {
-            l1 temp = sh_array[tid-step];
+            ll temp = sh_array[tid-step];
             __syncthreads();
             sh_array[tid] =max( temp,sh_array[tid]);
         }
@@ -45,7 +45,7 @@ __global__ void Inclusive_Scan(l1 *d_in, l1* d_out)
 }
 
 
-__global__ void Add(l1* d_in, l1* d_out)
+__global__ void Add(ll* d_in, ll* d_out)
 {
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     int bid = blockIdx.x;
@@ -58,32 +58,32 @@ __global__ void Add(l1* d_in, l1* d_out)
 
 int main()
 {
-    l1 *h_in, *h_scan;
+    ll *h_in, *h_scan;
 
     int Size;
     cout << "Enter size of array\n";
     cin >> Size;
 
     int Reduced_Size = (int)ceil(1.0*Size/Block_Size);  
-    int Array_Bytes = Size * sizeof(l1);
-    int Reduced_Array_Bytes = Reduced_Size * sizeof(l1);
+    int Array_Bytes = Size * sizeof(ll);
+    int Reduced_Array_Bytes = Reduced_Size * sizeof(ll);
 
-    h_in = (l1*)malloc(Array_Bytes);
-    h_scan = (l1*)malloc(Array_Bytes);
+    h_in = (ll*)malloc(Array_Bytes);
+    h_scan = (ll*)malloc(Array_Bytes);
 
     //Random nos
     srand(time(0));
-    for(l1 i=0; i<Size; i++)
+    for(ll i=0; i<Size; i++)
     {
         h_in[i] = rand()%10;
     }
 
-    l1 *d_in, *d_out, *d_sum;
+    ll *d_in, *d_out, *d_sum;
 
-    cudaMalloc((void**)&d_in, Reduced_Size*Block_Size*sizeof(l1));  
+    cudaMalloc((void**)&d_in, Reduced_Size*Block_Size*sizeof(ll));  
    
    cudaMalloc((void**)&d_out, Reduced_Array_Bytes);
-    cudaMalloc((void**)&d_sum, sizeof(l1));
+    cudaMalloc((void**)&d_sum, sizeof(ll));
 
     cudaMemcpy(d_in, h_in, Array_Bytes, cudaMemcpyHostToDevice);
 
@@ -101,14 +101,14 @@ int main()
     cudaFree(d_out);
 
    
-    l1 *pref;
-    pref = (l1*)malloc(Array_Bytes);
+    ll *pref;
+    pref = (ll*)malloc(Array_Bytes);
     pref[0] = h_in[0];
-    for(l1 i=1; i<Size; i++)
+    for(ll i=1; i<Size; i++)
         pref[i] = max(pref[i-1] , h_in[i]);
 
-    l1 flag = 0;
-    for(l1 i=0; i<Size; i++)
+    ll flag = 0;
+    for(ll i=0; i<Size; i++)
     {
         if(h_scan[i] != pref[i])
         {
